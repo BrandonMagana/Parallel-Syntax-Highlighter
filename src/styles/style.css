@@ -1,0 +1,97 @@
+
+  
+*{
+    margin: 0;
+    box-sizing: content-box;
+    font-family: 'Roboto Condensed', sans-serif;
+}
+
+body{
+    background-color: #111111;
+}
+
+.header{
+    padding: 10px 0;
+    color: #b9b8b6;
+}
+
+.title{
+    font-weight: 500;
+    font-size: 45px;
+    text-align: center;
+}
+
+.author{
+    font-weight: 100;
+    text-align: end;
+    margin-right: 10px;
+}
+
+.legend{
+    display: flex;
+    margin-left: 0 50%;
+    padding: 0;
+    width: fit-content;
+    margin: 10px auto;
+}
+
+.legend-p{
+    font-weight: 300;
+    font-size: 20px;
+    font-style:oblique;
+}
+
+ul{
+    list-style: none;
+    margin:0;
+    font-style: italic;
+}
+
+#code {
+    width: fit-content;
+    margin:10px auto;
+    background-color: #181818;
+    padding: 40px 80px;
+    border-radius: 1.3rem;
+    font-weight: 200;
+    font-family: 'M PLUS 1 Code', sans-serif;
+    border: solid #303134 3px;
+}
+
+.regex_1{
+    color: #fe7f01;
+}
+
+.regex_2{
+    color: #89ff22;
+}
+.regex_3{
+    color: #ff6150;
+}
+.regex_4{
+    color: #9122ff;
+}
+.regex_5{
+    color: #ff6150;
+}
+.regex_6{
+    color: #22fea0;
+}
+.regex_7{
+    color: #ffffff;
+}
+.regex_8{
+    color: #ff223a;
+}
+.regex_9{
+    color: #fff922;
+}
+.regex_10{
+    color: #e0801f;
+}
+.regex_11{
+    color: #226bff;
+}
+.regex_12{
+    color: #1ac0c6;
+}
