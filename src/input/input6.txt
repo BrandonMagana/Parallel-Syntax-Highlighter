@@ -1,108 +1,219 @@
-from dfa import DFA, oneCharDFA, commentDFA
-import sys
-from dfa.util import getTokens, identifyToken
+/*
+    Act 3.4 - Actividad Integral de BST
+    Luis David López Magaña A00344656
+    Brandon Josué Magaña Mendoza  A01640162
+    Carlos César Rodríguez García A00344666
 
--12e9
-true
-12.9e9
+    Programa que lee el reporte generado por el código de la Actividad
+    2.3 y guarda la cantidad de accesos por IP en un Binary Search Tree donde la llave
+    es el número de accesos y el valor la dirección IP.
 
-def main(path):
+    El programa, además, registra cuáles son las 5 IPs que más se repiten.
 
-    tokens = getTokens(path)
+    EJEMPLO DE LÍNEA EN ARCHIVO DE ENTRADA (generado por Actividad 2.3):
 
-    # Definición de autómatas
+        * "Oct 9 423.2.230.77:6166 3"
 
-    reales_dfa = DFA(
-        transition_table={
-            "0": [1, 1, 1, 4, 4, 7, 6, 7, 7, 9],
-            "#": [1, 1, 1, 4, 4, 6, 6, 6, 6, 9],
-            "-": [2, 9, 9, 9, 9, 8, 9, 9, 9, 9],
-            "+": [2, 9, 9, 9, 9, 8, 9, 9, 9, 9],
-            ".": [3, 3, 3, 9, 9, 9, 9, 9, 9, 9],
-            "E": [9, 9, 9, 9, 5, 9, 9, 9, 9, 9],
-            "e": [9, 9, 9, 9, 5, 9, 9, 9, 9, 9],
-        },
-        valid_states=[3, 4, 6],
-        name="Real"
-    )
+*/
+#include <bits/stdc++.h>
 
-    int_dfa = DFA(
-        transition_table={
-            "0": [3, 3, 4, 3, 4],
-            "#": [3, 3, 3, 3, 4],
-            "-": [2, 4, 4, 4, 4],
-            "+": [1, 4, 4, 4, 4],
-        },
-        valid_states=[3],
-        name="Entero"
-    )
+using namespace std;
 
-    var_dfa = DFA(
-        transition_table={
-            "A": [1, 1, 2],
-            "_": [2, 1, 2],
-            "#": [2, 1, 2]
-        },
-        valid_states=[1],
-        name="Variable"
-    )
-    comment_dfa = DFA(
-        transition_table={
-            "/": [1, 2, 2, 3],
-            "A": [3, 3, 2, 3],
-            "#": [3, 3, 2, 3],
-            ".": [3, 3, 2, 3],
-            "(": [3, 3, 2, 3],
-            ")": [3, 3, 2, 3],
-            "+": [3, 3, 2, 3],
-            "-": [3, 3, 2, 3],
-            "^": [3, 3, 2, 3],
-            "*": [3, 3, 2, 3],
-            "_": [3, 3, 2, 3],
-            "0": [3, 3, 2, 3],
-            " ": [3, 3, 2, 3],
-            "=": [3, 3, 2, 3],
-        },
-        valid_states=[2],
-        name="Comentario"
-    )
-    open_parentheses = oneCharDFA("(", name="Paréntesis que cierra")
-    closing_parentheses = oneCharDFA(")", name="Paréntesis que abre")
-    mult_dfa = oneCharDFA("*", name="Multiplicación")
-    subst_dfa = oneCharDFA("-", name="Resta")
-    power_dfa = oneCharDFA("^", name="Potencia")
-    division_dfa = oneCharDFA("/", name="División")
-    suma_dfa = oneCharDFA("+", name="Asignación")
-    asignacion_dfa = oneCharDFA("=", name="Asignación")
+// Nodo básico del árbol
+struct Node {
 
-    # Autómatas listados en el orden en el que se ejecutaran
+    string ip;
+    int freq; // número de ocurrencias de la IP
 
-    automatas = [
-        comment_dfa,
-        int_dfa,
-        reales_dfa,
-        var_dfa,
-        open_parentheses,
-        closing_parentheses,
-        mult_dfa,
-        subst_dfa,
-        power_dfa,
-        division_dfa,
-        suma_dfa,
-        asignacion_dfa
-    ]
-    # Inicializar tabla para output estilizado
-    for token in tokens:
-        token_type = identifyToken(token, automatas)
-        print(f"{token} ----> {token_type}")
+    Node *left, *right; // apuntadores a hijos
+
+    // Constructor parametrizado (los hijos se declaran como NULL)
+    Node(string ip, int freq) {
+        this->freq = freq;
+        this->ip=ip;
+        this->left = NULL;
+        this->right = NULL;
+    }    
+};
+
+// Estructura principal de BST
+struct BinarySearchTree{
+    Node *root; 
+    vector<Node *> fiveLargest; // array dinámico que almacena los 5 nodos con key de mayor valor
+
+    //-- INSERCIÓN --//
+
+    // Método para insertar un nuevo nodo, en el árbol.
+    // en caso de que el árbol sea vacío, se crea la root. 
+    // En caso contrario, se llama a insertUtil, que buscará el lugar del nuevo nodo
+    // :Argumentos: 
+    //      * string ip -> dirección ip del registro
+    //      * int freq -> número de ocurrencias del registro
+    // :Complejidad:
+    //      * O(log(n)) / O(h), pues normalmente llama a insertUtil.
+    void insert(string ip, int freq){
+        if (this->root == NULL){
+            this->root = new Node(ip, freq);
+            return;
+        }    
+        this->root = this->insertUtil(this->root, ip, freq);
+        this->findFiveLargest(); // actualización de los 5 nodos con mayor frequencia
+    }
+
+    // Método para buscar posición de un nuevo nodo e insertarlo
+    // en el árbol. Se recorre hasta encontrar una hoja del árbol y se inserta
+    // el nuevo nodo como un hijo.
+    // :Argumentos: 
+    //      * Node* currentNode -> nodo actual
+    //      * string ip -> dirección ip del registro
+    //      * int freq -> número de ocurrencias del registro
+    // :Complejidad:
+    //      * O(log(n)) / O(h), pues se recorre normalmente la altura del árbol
+    Node* insertUtil(Node* currentNode, string ip, int freq){
+
+        // Si no existe el nodo (se llega a la posición deseada) se crea.
+        if (currentNode == NULL) {
+            currentNode = new Node(ip, freq);
+            return currentNode;
+        }
 
 
-if __name__ == "__main__":
+        if (freq < currentNode->freq) {
+            // Inserción a la izquierda, si el valor de la frecuencia 
+            // es menor que la frecuencia del nodo actual
 
-    if len(sys.argv) < 2:
-        raise "Expected an argument in command line"
-    main(sys.argv[1])
+            // Procesamiento de nodo izquierdo
+            currentNode->left = insertUtil(currentNode->left, ip, freq);
+        } else {
 
--12e9
-true
-12.9e9
+            // Inserción a la derecha, si el valor de la frecuencia 
+            // es mayor que la frecuencia del nodo actual
+
+            // Procesamiento de nodo derecho
+            currentNode->right = insertUtil(currentNode->right, ip, freq);
+        }
+
+        // Retorno de nodo (en la llamada principal, regresa "root")
+        return currentNode;
+    }
+
+    //-- NODOS CON MAYOR VALOR --//
+
+    // Crea un nuevo vector y llama a fiveLargestUtil para llenarlo con los 5 nodos 
+    // de valor más alto. Retorna el nuevo vector
+    // :Complejidad:
+    //      O(n) debido al traversal de fiveLargestUtil.
+    vector<Node*> findFiveLargest(){
+        this->fiveLargest = vector<Node *>();
+        fiveLargestUtil(this->root);
+        return fiveLargest;
+    }
+
+    // Encuentra los 5 nodos con mayor frecuencia utilizando un Reverse Inorder Traversal
+    // :Argumentos: 
+    //      * Node* root -> nodo actual
+    // :Complejidad:
+    //      Debido a que en esencia utilizamos un Reverse Inorder Traversal, podemos asumir que la mayor
+    //      parte de los nodos serán visitados. En el peor de los casos la complejidad será O(n), 
+    //      aunque en la mayoría de los casos será menor que esto.
+	void fiveLargestUtil(Node *root) {
+		if(root){
+            fiveLargestUtil(root->right);
+            if(fiveLargest.size() <= 5) {
+                fiveLargest.push_back(root);
+                fiveLargestUtil(root->left);
+            }
+        }
+	}
+	
+    // Imprime los valores en el vector de fiveLargest
+    // :Complejidad:
+    //      O(5), pues siempre imprime 5 valores
+    void printFiveLargest(){
+        for(int i=0; i < 5; i++){
+            cout << "  --> IP: " << fiveLargest[i]->ip << ", FREQ: " << fiveLargest[i]->freq <<endl;
+        }
+    }
+
+    //-- IMPRESIÓN DE DATOS -- //
+
+    void printPreorder() {
+        preorderUtil(this->root);
+    }
+
+    // Imprime las frequencias de todos los nodos en el árbol. 
+    // :Complejidad:
+    //      O(n), debido a que en traversal se visitan todos los nodos.
+    void preorderUtil(Node *root){
+        if(root){
+            cout << "  --> IP: " << root->ip << ", FREQ: " << root->freq <<endl;
+            preorderUtil(root->right);
+            preorderUtil(root->left);
+        }
+    }
+};
+
+// Crea nodos para cada par en el unordered_map y los agrega a un BST
+// que es regresado. 
+// :Argumentos:
+//      * unodedered_map ocurrencies -> mapa que almacena las ocurrencias de cada IP.
+//                                      Las keys son las IPs y los valores son la frecuencia
+// :Complejidad:
+//      O(nlogn), para cada par (hay N pares) se realiza una inserción en el BST y la inserción es O(logn)
+BinarySearchTree createTree(unordered_map<string, int> ocurrencies) {
+
+    // Creación de objeto BST
+    BinarySearchTree tree = BinarySearchTree();
+
+    for (auto &pair : ocurrencies) {
+        // Para cada par, llama a insert con el key y el value
+        tree.insert(pair.first, pair.second);
+    }
+
+    // Retorno del BST
+    return tree;
+}
+
+int main(){
+
+    cout << "--------------------------------------\n";
+    cout << "--------| Actividad 3.4: BST |--------\n";
+    cout << "--------------------------------------\n";
+
+    //-- Lectura de reporte --//
+   
+	ifstream file("bitacora.txt"); // se abre archivo
+    
+    string line; //Jun 1 746.6.283.33:4659 1
+
+    // Datos a obtener
+    string month, day, ip, freq_str;
+    int freq; 
+
+    unordered_map<string, int> ocurrencies;
+    while (getline(file, line)) {
+		// Almacenamiento de los datos separados por espacios
+        stringstream ss(line);
+        getline(ss, month, ' ');
+        getline(ss, day, ' ');
+		getline(ss, ip, ' ');
+        getline(ss, freq_str, ' ');
+        freq = stoi(freq_str);        
+
+        // Adición a pair cuya key tiene es la ip (cálculo de ocurrencias)
+        ocurrencies[ip] += freq;
+    }
+
+    file.close(); // Se cierra archivo
+
+    //-- Creación de BST --//
+    BinarySearchTree tree = createTree(ocurrencies);
+
+    // Imprimir los valores en Preorder
+    cout << "\n__PreOrder Traversal__: \n";
+    tree.printPreorder();
+    // Imprimir las 5 IPs con mayores ocurrencias
+    cout << "\n__5 IPs con mayores ocurrencias__: \n";
+    tree.printFiveLargest();
+
+}

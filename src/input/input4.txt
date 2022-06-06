@@ -1,108 +1,294 @@
-from dfa import DFA, oneCharDFA, commentDFA
-import sys
-from dfa.util import getTokens, identifyToken
+/* 
+    Act 3.2 - Árbol Heap
+    Brandon Josué Magaña Mendoza A01640162
 
--12e9
-true
-12.9e9
+    Implementación de Binary Search Tree de tipo Max Heap de Enteros.
 
-def main(path):
+    Con Métodos:
+        -push
+        -pop
+        -top
+        -empty
+        -size
+*/
 
-    tokens = getTokens(path)
+#include <bits/stdc++.h>
+using namespace std;
 
-    # Definición de autómatas
+class MaxHeap { 
+        public:
+            //Atributos
+            vector<int> maxHeap; // vector que almacena el heap ordenado
+            int len; // tamaño del heap
+            
+            //Constructor
+            MaxHeap(){
+                this->len=0;
+            }
 
-    reales_dfa = DFA(
-        transition_table={
-            "0": [1, 1, 1, 4, 4, 7, 6, 7, 7, 9],
-            "#": [1, 1, 1, 4, 4, 6, 6, 6, 6, 9],
-            "-": [2, 9, 9, 9, 9, 8, 9, 9, 9, 9],
-            "+": [2, 9, 9, 9, 9, 8, 9, 9, 9, 9],
-            ".": [3, 3, 3, 9, 9, 9, 9, 9, 9, 9],
-            "E": [9, 9, 9, 9, 5, 9, 9, 9, 9, 9],
-            "e": [9, 9, 9, 9, 5, 9, 9, 9, 9, 9],
-        },
-        valid_states=[3, 4, 6],
-        name="Real"
-    )
+            //Deconstructor
+            ~MaxHeap(){
 
-    int_dfa = DFA(
-        transition_table={
-            "0": [3, 3, 4, 3, 4],
-            "#": [3, 3, 3, 3, 4],
-            "-": [2, 4, 4, 4, 4],
-            "+": [1, 4, 4, 4, 4],
-        },
-        valid_states=[3],
-        name="Entero"
-    )
+            }
 
-    var_dfa = DFA(
-        transition_table={
-            "A": [1, 1, 2],
-            "_": [2, 1, 2],
-            "#": [2, 1, 2]
-        },
-        valid_states=[1],
-        name="Variable"
-    )
-    comment_dfa = DFA(
-        transition_table={
-            "/": [1, 2, 2, 3],
-            "A": [3, 3, 2, 3],
-            "#": [3, 3, 2, 3],
-            ".": [3, 3, 2, 3],
-            "(": [3, 3, 2, 3],
-            ")": [3, 3, 2, 3],
-            "+": [3, 3, 2, 3],
-            "-": [3, 3, 2, 3],
-            "^": [3, 3, 2, 3],
-            "*": [3, 3, 2, 3],
-            "_": [3, 3, 2, 3],
-            "0": [3, 3, 2, 3],
-            " ": [3, 3, 2, 3],
-            "=": [3, 3, 2, 3],
-        },
-        valid_states=[2],
-        name="Comentario"
-    )
-    open_parentheses = oneCharDFA("(", name="Paréntesis que cierra")
-    closing_parentheses = oneCharDFA(")", name="Paréntesis que abre")
-    mult_dfa = oneCharDFA("*", name="Multiplicación")
-    subst_dfa = oneCharDFA("-", name="Resta")
-    power_dfa = oneCharDFA("^", name="Potencia")
-    division_dfa = oneCharDFA("/", name="División")
-    suma_dfa = oneCharDFA("+", name="Asignación")
-    asignacion_dfa = oneCharDFA("=", name="Asignación")
+            // Métodos Principales
 
-    # Autómatas listados en el orden en el que se ejecutaran
+            // Función que ingresa un nodo al heap, llama a la función heapifyUp y aumenta el tamaño del vector
+            // Complejidad: 
+            void push(int item) {
+                maxHeap.push_back(item);
+                len++;
+                heapifyUp();
+            }
 
-    automatas = [
-        comment_dfa,
-        int_dfa,
-        reales_dfa,
-        var_dfa,
-        open_parentheses,
-        closing_parentheses,
-        mult_dfa,
-        subst_dfa,
-        power_dfa,
-        division_dfa,
-        suma_dfa,
-        asignacion_dfa
-    ]
-    # Inicializar tabla para output estilizado
-    for token in tokens:
-        token_type = identifyToken(token, automatas)
-        print(f"{token} ----> {token_type}")
+            // Función que elimina la raíz del heap, llama a la función heapifyDown y disminuye el tamaño del vector
+            // Complejidad: O(Log(n))
+            void pop(){
+                if(len==0) return;
+                maxHeap[0]= maxHeap[len-1];
+                heapifyDown();
+                len--;
+                maxHeap.erase(maxHeap.begin()+(len));
+                return;
+            }
+            
+            // Función que retorna el nodo raíz
+            // Complejidad: O(1)
+            int top(){
+                if(len == 0) return -1;
+                return maxHeap[0];
+            }
 
+            // Función que indica si el heap está vacío
+            // Complejidad: O(1)		
+            bool empty(){
+                return len == 0;
+            }
 
-if __name__ == "__main__":
+            // Función que retorna el tamaño del heap
+            // Complejidad: O(1)
+            int size(){
+                return len;
+            }
 
-    if len(sys.argv) < 2:
-        raise "Expected an argument in command line"
-    main(sys.argv[1])
+            //Función que imprime por pantalla los valores dentro del MaxHeap
+            void print(){
+                for(auto &it: maxHeap){
+                    cout << it << endl;
+                }
+                cout<<"\n";
+            }  
+            
+        private:
+		    // Función auxiliar que intercambia dos nodos
+		    // Complejidad: O(1)
+            void swap(int i1, int i2){
+                int temp = maxHeap[i1];
+                maxHeap[i1] = maxHeap[i2];
+                maxHeap[i2] = temp;
+            }
+        
+            // Funciones que indican la existencia de nodo izquierdo, derecho o padre
+            // Complejidad: O(1)
+            bool hasRight(int index){
+                return getRightIndex(index)< this->maxHeap.size();
+            }
+		
+            bool hasLeft(int index) {
+                return getLeftIndex(index) < this->maxHeap.size();
+            }
+            
+            bool hasParent(int index){
+                return getParentIndex(index) >= 0;
+            }
 
--12e9
-true
-12.9e9
+            // Getters de los índices de nodo padre, izquierdo y derecho
+            // Complejidad: O(1)
+            int getParentIndex(int index){return (index-1)/2;}
+            
+            int getLeftIndex(int index){return index*2 + 1;}
+
+            int getRightIndex(int index){return index*2 + 2;}
+
+            // Getters de nodos padre, izquierdo y derecho
+            // Complejidad: O(1)
+            int getRight(int index){
+                return maxHeap[getRightIndex(index)];
+            }
+
+            int getLeft(int index){
+                return maxHeap[getLeftIndex(index)];
+            }
+
+            int getParent(int index){
+                return maxHeap[getParentIndex(index)];
+            }
+
+            //Función encargada de hacer los intercambios en el array desde el ultimo elemento hasta el primero
+            //Complejidad: O(log n)
+            void heapifyUp(){
+                int current = len - 1; 
+                while(hasParent(current) && getParent(current) < maxHeap[current]){
+                    swap(current, getParentIndex(current)); 
+                    current = getParentIndex(current);
+                }
+            }
+            
+            //Función encargada de hacer los intercambios en el array desde el primer elemento hasta el último
+            //Complejidad: O(log n)
+            void heapifyDown(){
+                int index = 0;
+                while(hasLeft(index)){
+                    int maxChildIndex = getLeftIndex(index);
+                    if(hasRight(index) && getRight(index) > getLeft(index)){
+                        maxChildIndex = getRightIndex(index);
+                    }
+                    if(maxHeap[maxChildIndex] > maxHeap[index]){
+                        swap(maxChildIndex, index);
+                    }else{
+                        break;
+                    }
+                    index = maxChildIndex;
+                }
+            }    
+};
+
+int main() {
+    //Declaración de MaxHeap de prueba
+    MaxHeap heap1 = MaxHeap();
+    MaxHeap heap2= MaxHeap();
+    MaxHeap heap3= MaxHeap(); 
+    MaxHeap heap4= MaxHeap();
+    
+    cout<<"-------------------"<<endl;  
+    cout<<"Caso de prueba 1"<<endl;
+    cout<<"-------------------"<<endl;
+    
+    //Agregando datos al Heap
+    heap1.push(1);
+    heap1.push(2);
+    heap1.push(3);
+    heap1.push(4);
+    heap1.push(5); 
+    heap1.push(6); 
+    heap1.push(7); 
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap1.top()<<endl; 
+    cout <<"Tamano: "<< heap1.size()<<endl;
+    cout<<"Empty: "<<heap1.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap1.print();
+
+    //Removiendo el elemento con mayor prioridad
+    heap1.pop();
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap1.top()<<endl; 
+    cout <<"Tamano: "<< heap1.size()<<endl;
+    cout<<"Empty: "<<heap1.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap1.print();
+
+    cout<<"-------------------"<<endl;  
+    cout<<"Caso de prueba 2"<<endl;
+    cout<<"-------------------"<<endl;
+    
+    //Agregando datos al Heap
+    heap2.push(56);
+    heap2.push(75);
+    heap2.push(20);
+    heap2.push(15); 
+    heap2.push(432); 
+    heap2.push(32); 
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap2.top()<<endl; 
+    cout <<"Tamano: "<< heap2.size()<<endl;
+    cout<<"Empty: "<<heap2.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap2.print();
+
+    //Removiendo el elemento con mayor prioridad 3 veces
+    heap2.pop();
+    heap2.pop();
+    heap2.pop();
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap2.top()<<endl; 
+    cout <<"Tamano: "<< heap2.size()<<endl;
+    cout<<"Empty: "<<heap2.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap2.print();
+
+    cout<<"-------------------"<<endl;  
+    cout<<"Caso de prueba 3"<<endl;
+    cout<<"-------------------"<<endl;
+    
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap3.top()<<endl; 
+    cout <<"Tamano: "<< heap3.size()<<endl;
+    cout<<"Empty: "<<heap3.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap3.print();
+
+    //Removiendo el elemento con mayor prioridad 3 veces
+    heap3.pop();
+    
+    //Agregando datos al Heap
+    heap3.push(10);
+    heap3.push(30);
+    heap3.push(20);
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap3.top()<<endl; 
+    cout <<"Tamano: "<< heap3.size()<<endl;
+    cout<<"Empty: "<<heap3.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap3.print();
+
+    cout<<"-------------------"<<endl;  
+    cout<<"Caso de prueba 4"<<endl;
+    cout<<"-------------------"<<endl;
+    
+    //Agregando datos al Heap
+    heap4.push(46);
+    heap4.push(32);
+    heap4.push(91);
+    heap4.push(64);
+    heap4.push(23);
+    heap4.push(19);
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap4.top()<<endl; 
+    cout <<"Tamano: "<< heap4.size()<<endl;
+    cout<<"Empty: "<<heap4.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap4.print();
+
+    //Removiendo el elemento con mayor prioridad 3 veces
+    heap4.pop();
+    heap4.pop();
+    heap4.pop();
+    heap4.pop();
+    heap4.pop();
+    heap4.pop();
+
+    //Impresión estado actual de Max Heap
+    cout<<"Estado actual de Max Heap:"<<endl;
+    cout<<"Top: "<<heap4.top()<<endl; 
+    cout <<"Tamano: "<< heap4.size()<<endl;
+    cout<<"Empty: "<<heap4.empty()<<endl;
+    cout<<"Heap: "<<endl;
+    heap4.print();
+
+    return 0;
+}

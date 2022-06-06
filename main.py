@@ -64,6 +64,10 @@ def analyzeFile(input):
 
             else: 
                 line += tok.value
+        
+        elif tok.type == 'regex_4':
+            line += f'<span class={tok.type}>{tok.value}</span><br>'
+        
         else:
             line += f'<span class={tok.type}>{tok.value}</span>'
     

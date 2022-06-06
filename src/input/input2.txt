@@ -1,108 +1,104 @@
-from dfa import DFA, oneCharDFA, commentDFA
-import sys
-from dfa.util import getTokens, identifyToken
+import turtle
+import pandas as pd
 
--12e9
-true
-12.9e9
+"""
+    Check is a given state is in the current dataframe column
+    
+    Arguments:
+        states(list): list from which is going to check if the given state name exists in
+        answer_state(str): string that represents the state to be checked
+    
+    Returns:
+        (bool) indicate whether the state is valid or not
+"""
+def state_exists(states, answer_state):
+    return answer_state in states
 
-def main(path):
+"""
+    Check is a given state is in the current dataframe column
+    
+    Arguments:
+        states_df(pandas.DataFrame): pandas Dataframe from which is going to retrieve a given state
+        answer_state(str): string that represents the state 
+    
+    Returns:
+        coors(tuple): tuple that contains the x and y coordinates of the state
+"""
 
-    tokens = getTokens(path)
+def get_state_coor(states_df, answer_state):
+    state = states_df[states_df["state"] == answer_state]
+    x = int(state.x)
+    y = int(state.y)
+    coors = (x, y)
+    return coors
 
-    # Definición de autómatas
+"""
+    Creates a new .csv file that contains the unguessed states names.
+    
+    Arguments:
+        states(list): list of all names of the states
+        states_guessed(list): list that contains the name of the states that have ben guessed
+    
+    Returns:
+        None
+"""
+def create_states_to_learn_file(states, states_guessed):
+    #Fill the states_to_learn list with the names of the states that couldn't be guessed
+    states_to_learn = [state for state in states if state not in states_guessed]
+   
+    #Generate a pandas.DataFrame from a dictionary
+    to_learn_dict = {
+        "States to learn" : states_to_learn
+    }
+    states_to_learn_df = pd.DataFrame(to_learn_dict)
 
-    reales_dfa = DFA(
-        transition_table={
-            "0": [1, 1, 1, 4, 4, 7, 6, 7, 7, 9],
-            "#": [1, 1, 1, 4, 4, 6, 6, 6, 6, 9],
-            "-": [2, 9, 9, 9, 9, 8, 9, 9, 9, 9],
-            "+": [2, 9, 9, 9, 9, 8, 9, 9, 9, 9],
-            ".": [3, 3, 3, 9, 9, 9, 9, 9, 9, 9],
-            "E": [9, 9, 9, 9, 5, 9, 9, 9, 9, 9],
-            "e": [9, 9, 9, 9, 5, 9, 9, 9, 9, 9],
-        },
-        valid_states=[3, 4, 6],
-        name="Real"
-    )
+    #Create .csv file from dictionary
+    states_to_learn_df.to_csv("States_to_learn.csv")
 
-    int_dfa = DFA(
-        transition_table={
-            "0": [3, 3, 4, 3, 4],
-            "#": [3, 3, 3, 3, 4],
-            "-": [2, 4, 4, 4, 4],
-            "+": [1, 4, 4, 4, 4],
-        },
-        valid_states=[3],
-        name="Entero"
-    )
+if __name__ == '__main__':
 
-    var_dfa = DFA(
-        transition_table={
-            "A": [1, 1, 2],
-            "_": [2, 1, 2],
-            "#": [2, 1, 2]
-        },
-        valid_states=[1],
-        name="Variable"
-    )
-    comment_dfa = DFA(
-        transition_table={
-            "/": [1, 2, 2, 3],
-            "A": [3, 3, 2, 3],
-            "#": [3, 3, 2, 3],
-            ".": [3, 3, 2, 3],
-            "(": [3, 3, 2, 3],
-            ")": [3, 3, 2, 3],
-            "+": [3, 3, 2, 3],
-            "-": [3, 3, 2, 3],
-            "^": [3, 3, 2, 3],
-            "*": [3, 3, 2, 3],
-            "_": [3, 3, 2, 3],
-            "0": [3, 3, 2, 3],
-            " ": [3, 3, 2, 3],
-            "=": [3, 3, 2, 3],
-        },
-        valid_states=[2],
-        name="Comentario"
-    )
-    open_parentheses = oneCharDFA("(", name="Paréntesis que cierra")
-    closing_parentheses = oneCharDFA(")", name="Paréntesis que abre")
-    mult_dfa = oneCharDFA("*", name="Multiplicación")
-    subst_dfa = oneCharDFA("-", name="Resta")
-    power_dfa = oneCharDFA("^", name="Potencia")
-    division_dfa = oneCharDFA("/", name="División")
-    suma_dfa = oneCharDFA("+", name="Asignación")
-    asignacion_dfa = oneCharDFA("=", name="Asignación")
+    #Setting up screen
+    screen = turtle.Screen()
+    screen.title("U.S States Game")
 
-    # Autómatas listados en el orden en el que se ejecutaran
+    #Adding image as screen background
+    image = "blank_states_img.gif"
+    screen.addshape(image)
+    turtle.shape(image)
 
-    automatas = [
-        comment_dfa,
-        int_dfa,
-        reales_dfa,
-        var_dfa,
-        open_parentheses,
-        closing_parentheses,
-        mult_dfa,
-        subst_dfa,
-        power_dfa,
-        division_dfa,
-        suma_dfa,
-        asignacion_dfa
-    ]
-    # Inicializar tabla para output estilizado
-    for token in tokens:
-        token_type = identifyToken(token, automatas)
-        print(f"{token} ----> {token_type}")
+    #Getting the states from a .csv files and turning them into a list
+    df  = pd.read_csv("50_states.csv")
+    states = df.state.to_list()
+    #List that contains the states that have been guessed
+    states_guessed = []
 
+    #Game Logic
+    while len(states_guessed) < 50:
+        #Display input window  and format the given answer
+        answer_state = screen.textinput(f"{len(states_guessed)}/50 States Guessed", 
+                                        "What's another state's name?: ").title()
 
-if __name__ == "__main__":
+        #Check if user wants to end the game before winning and stop it if so.
+        #Also creates a .csv file with the unguessed states names
+        if answer_state == "Exit":
+            create_states_to_learn_file(states, states_guessed)
+            print(f"Keep practicing you guessed {len(states_guessed)}/50 States")
+            print("Check out the States you got to learn at States_to_learn.csv File")
+            break
+        
+        #Writes the name of the state on top of the image and appends it to the states_guessed list
+        if state_exists(states, answer_state):
+            states_guessed.append(answer_state)
+            t = turtle.Turtle()
+            t.hideturtle()
+            t.penup()
+            coors = get_state_coor(df, answer_state)
+            t.goto(x = coors[0], y = coors[1])
+            t.write(answer_state)
 
-    if len(sys.argv) < 2:
-        raise "Expected an argument in command line"
-    main(sys.argv[1])
+    #Display winning message
+    if(len(states_guessed) == 50):
+        print("Congratulations, you guessed all the US states!")
 
--12e9
-true
-12.9e9
+    #The turtle.screen window is shut down
+    screen.bye()
